@@ -110,6 +110,7 @@ class FuzzySystem():
             ax.get_yaxis().tick_left()
         
         plt.tight_layout()
+        plt.show()
 
 
 

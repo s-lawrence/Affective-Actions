@@ -19,37 +19,57 @@ if __name__ == "__main__":
     
     icub = ICub()
     icub.intialize_yarp()
-    icub.connect_image_port(args.input_port, args.output_port)
+    icub.connect_image_ports(args.right_view_input_port, args.right_view_output_port,
+                            args.left_view_input_port, args.left_view_output_port)
+    icub.open_stress_port(args.emotion_port)
+    icub.open_object_port(args.object_port)
     
-    image = icub.get_image()
-    H,W,D = image.shape
-    
-    # construct a blob from the input image and then perform a forward
-    blob         = yolo.get_blob_from_image(image)
-    yolo.net.setInput(blob)
-    start        = time.time()
-    layerOutputs = yolo.net.forward(yolo.output_layers)
-    end          = time.time()
-    print("[INFO] YOLO took {:.6f} seconds".format(end - start))
-    
-    # pass of the YOLO object detector, giving us our bounding boxes and
-    # associated probabilities
-    boxes, confidences, classIDs = yolo.get_object_data(layerOutputs, image_width=W, image_height=H)
-    boxes, confidences, classIDs = yolo.parse_object_data(boxes, confidences, classIDs)
-    
-    clutter = len(classIDs)
-    uncertainty = 1 - np.round(np.mean(confidences), 2)
-    
-    image = yolo.get_yolo_image(image, boxes, confidences, classIDs)
-    
+    clutter, uncertainty = 0, 0
+    try:
+        while True:
+            right_image = icub.get_right_image()
+            left_image  = icub.get_left_image()
+            H,W,D = right_image.shape
+            
+            images = [left_image, right_image]
+            
+            object_centers = []
+            
+            for image in images:
+                # construct a blob from the input image and then perform a forward
+                blob         = yolo.get_blob_from_image(image)
+                yolo.net.setInput(blob)
+                layerOutputs = yolo.net.forward(yolo.output_layers)
+                
+                # pass of the YOLO object detector, giving us our bounding boxes and
+                # associated probabilities
+                boxes, confidences, classIDs, centers = yolo.get_object_data(layerOutputs, image_width=W, image_height=H)
+                boxes, confidences, classIDs, centers = yolo.parse_object_data(boxes, confidences, classIDs, centers)
+                object_centers.append(centers)
+                
+                # display the image that has been read
+                image = yolo.get_yolo_image(image, boxes, confidences, classIDs)
+                matplotlib.pylab.imshow(image)
+
+            clutter = len(classIDs)
+            uncertainty = 1 - np.round(np.mean(confidences), 2)
+            
+            fuzzy = FuzzySystem()
+            fuzzy.interpret(clutter, uncertainty)
+            # fuzzy.plot_interpretation()
+            
+            icub.publish_affect_level(fuzzy.emotion)
+            icub.publish_objects(object_centers)
+            # publish clutter, centers
+            print(clutter)
+            print(fuzzy.emotion)
+        
+            
+    except KeyboardInterrupt:
+        pass
+    # close port connections
     icub.cleanup()
     
-    # display the image that has been read
-    matplotlib.pylab.imshow(image)
     
-    fuzzy = FuzzySystem()
-    # fuzzy.plot_membersip_functions()
-    fuzzy.interpret(clutter, uncertainty)
-    fuzzy.plot_interpretation()
-    print(fuzzy.emotion)
+
 
