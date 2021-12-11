@@ -18,9 +18,9 @@ class FuzzySystem():
         self.x_emotion   = np.arange(-1,  1, 0.05)
         
         # Generate fuzzy memberships functions
-        self.cluttered_lo = fuzz.trimf(self.x_cluttered, [0 ,0  ,2 ])
-        self.cluttered_md = fuzz.trimf(self.x_cluttered, [0 ,2  ,5])
-        self.cluttered_hi = fuzz.trimf(self.x_cluttered, [2 ,10 ,10])
+        self.cluttered_lo = fuzz.trimf(self.x_cluttered, [0 ,0  ,1 ])
+        self.cluttered_md = fuzz.trimf(self.x_cluttered, [0 ,1  ,2])
+        self.cluttered_hi = fuzz.trimf(self.x_cluttered, [1 ,10 ,10])
         
         self.uncertain_lo = fuzz.trimf(self.x_uncertain, [0   ,0   ,0.5])
         self.uncertain_md = fuzz.trimf(self.x_uncertain, [0   ,0.5 ,1  ])
@@ -110,7 +110,6 @@ class FuzzySystem():
             ax.get_yaxis().tick_left()
         
         plt.tight_layout()
-        plt.show()
 
 
 

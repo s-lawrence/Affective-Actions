@@ -10,7 +10,7 @@ import numpy as np
 import os
 
 class Yolo():
-    def __init__(self, yoloPath, confidence_bound=0.25, threshold=0.3):
+    def __init__(self, yoloPath, confidence_bound=0.30, threshold=0.3):
         self.labels           = self.get_yolo_labels(yoloPath)
         self.colors           = self.get_yolo_colors(self.labels) 
         self.net              = self.load_yolo_net(yoloPath)

@@ -5,7 +5,7 @@ Created on Mon Nov 29 11:09:58 2021
 
 @author: s7lawren
 """
-import matplotlib.pylab
+import matplotlib.pylab as plt
 import numpy as np
 import time
 from fuzzy_system import FuzzySystem
@@ -35,7 +35,7 @@ if __name__ == "__main__":
             
             object_centers = []
             
-            for image in images:
+            for i, image in enumerate(images):
                 # construct a blob from the input image and then perform a forward
                 blob         = yolo.get_blob_from_image(image)
                 yolo.net.setInput(blob)
@@ -49,21 +49,26 @@ if __name__ == "__main__":
                 
                 # display the image that has been read
                 image = yolo.get_yolo_image(image, boxes, confidences, classIDs)
-                matplotlib.pylab.imshow(image)
+                if i == 1: 
+                    icub.publish_object_image(image)
+                # plt.imshow(image)
+                # plt.show()
 
             clutter = len(classIDs)
             uncertainty = 1 - np.round(np.mean(confidences), 2)
             
             fuzzy = FuzzySystem()
             fuzzy.interpret(clutter, uncertainty)
+            # fuzzy.plot_membersip_functions()
             # fuzzy.plot_interpretation()
+            # plt.show()
             
             icub.publish_affect_level(fuzzy.emotion)
             icub.publish_objects(object_centers)
             # publish clutter, centers
             print(clutter)
             print(fuzzy.emotion)
-        
+            
             
     except KeyboardInterrupt:
         pass

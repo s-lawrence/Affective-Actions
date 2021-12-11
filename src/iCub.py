@@ -23,6 +23,10 @@ class ICub():
         self.left_image_port = yarp.Port()
         self.left_image_port.open(left_view_output_port)
         yarp.Network.connect(left_view_input_port, left_view_output_port)
+        
+        self.image_output_port = yarp.Port()
+        self.image_output_port.open('/icub/yolo/view')
+        yarp.Network.connect('/icub/yolo/view', '/view01')
     
     def open_stress_port(self, port):
         self.stress_port = yarp.Port()
@@ -59,7 +63,12 @@ class ICub():
         yarp_bottle = yarp.Bottle()
         yarp_bottle.addDouble(affect)
         self.stress_port.write(yarp_bottle)
-    
+        
+    def publish_object_image(self, image):
+        yarp_image = yarp.ImageRgb()
+        yarp_image.setExternal(np.ascontiguousarray(image), image.shape[1], image.shape[0])
+        self.image_output_port.write(yarp_image)
+        
     def publish_objects(self, objects):
         yarp_bottle = yarp.Bottle()
         
@@ -82,5 +91,6 @@ class ICub():
     def cleanup(self):
         self.right_image_port.close()
         self.left_image_port.close()
+        self.image_output_port.close()
         self.stress_port.close()
         self.object_port.close()
